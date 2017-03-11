@@ -1,0 +1,12 @@
+{
+    "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "db": 0
+    },
+    "mq": {
+        "queue_key": "so.core.task.queue",
+        "log_key": "so.core.task.logs",
+        "url_log_key": "so.core.task.urls"
+    }
+}
