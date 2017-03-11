@@ -3,7 +3,7 @@ import subprocess
 import os
 
 params = {
-    "index": "1234",
+    "index": "rolight-sample",
     "elasticsearch_host": "localhost",
     "allowed_domains": ["spidertest-app.smartgslb.com"],
     "start_urls": ["http://spidertest-app.smartgslb.com"],
