@@ -5,8 +5,10 @@
         "db": 0
     },
     "mq": {
-        "queue_key": "so.core.task.queue",
-        "log_key": "so.core.task.logs",
+        "spiders_key": "so.core.spiders",
+        "spider_key": "so.core.spiders.{spider_name}",
+        "task_queue_key": "so.core.tasks",
+        "log_key": "so.core.task.{task_id}.log",
         "url_log_key": "so.core.task.urls"
     }
 }

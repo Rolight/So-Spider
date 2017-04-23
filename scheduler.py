@@ -1,8 +1,10 @@
 import json
 import redis
 import subprocess
+import sys
 
-class SoSpiderSchduler(object):
+
+class SoSpiderSchdulerBase(object):
 
     def load_conf(self):
         with open('conf.json', 'r') as f:
@@ -15,40 +17,21 @@ class SoSpiderSchduler(object):
             port=redis_conf['port'],
             db=redis_conf['db'],
         )
+        print('connect redis success')
 
-    def run_spider(self, params):
 
-    def get_task(self):
-        task_data = self.redis_cache.blpop(self.queue_key, timeout=0)
-        return task_data
+class SoSpiderSchduler(SoSpiderSchdulerBase):
 
-    def __init__(self):
-        self.load_conf()
-        self.make_connection()
-        for attr, values in self.conf['mq'].items():
-            setattr(self, attr, values)
+    def __init__(self, name):
+        self.name = name
 
     def run(self):
-        while True:
-            task_data = self.get_task()
-            task_args = [
-                "scrapy", "crawl",
-                "generic_spider", "-a", "config=%s"+task_data
-            ]
-            p = subprocess.Popen(
-                task_args,
-                stdin=
+        print('Schduler has running as %s' % self.name)
+        subprocess.Popen(['python', 'cluster_manager.py', self.name])
+        print('cluster manager run success')
 
 
-params = {
-    "index": "rolight-sample",
-    "allowed_domains": ["spidertest-app.smartgslb.com"],
-    "start_urls": ["http://spidertest-app.smartgslb.com"],
-    "sleep": 1,
-    "parse_url_rules": [
-        r"http://spidertest-app.smartgslb.com/\d{4}/\d{2}/\d{2}/.*",
-    ],
-}
-
-params = json.dumps(params)
-
+if __name__ == '__main__':
+    name = sys.argv[1]
+    schduler = SoSpiderSchduler(name)
+    schduler.run()
