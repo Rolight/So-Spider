@@ -20,6 +20,7 @@ check_exec_success() {
 }
 
 CurDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BaseImage="daocloud.io/rolight/so-spider:feature-scheduler-b732c3c"
 
 create_data_volume(){
   docker inspect so-spider-data &> /dev/null
@@ -37,25 +38,29 @@ create_data_volume(){
 start() {
   spider_name="so-spider-$1"
   echo $spider_name
-  docker kill so-dashboard 2>/dev/null
-  docker rm -v so-dashboard 2>/dev/null
+
+  docker kill "$spider_name" 2>/dev/null
+  docker rm -v "$spider_name" 2>/dev/null
 
   create_data_volume
 
-  docker run -d --name so-dashboard \
-    -e "DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}" \
-    -p 8081:8081 \
-    --volumes-from so-dashboard-data \
-    --restart=always \
+  docker run -d --name $spider_name \
+    --volumes-from so-spider-data \
     --log-opt max-size=10m \
     --log-opt max-file=9 \
     ${BaseImage} \
-    uwsgi --ini /usr/src/app/dashboard/uwsgi.ini -b 99999
+    python scheduler.py "$1"
 
-  check_exec_success "$?" "start so-dashboard container"
+  check_exec_success "$?" "start spider $1 container"
 }
 
-BaseImage=""
+stop() {
+  spider_name="so-spider-$1"
+  docker stop $spider_name 2>/dev/null
+  docker rm -v $spider_name 2>/dev/null
+  docker rm -v $spider_name 2>/dev/null
+}
+
 
 ##################
 # Start of script
@@ -67,7 +72,7 @@ shift
 
 case "$Action" in
   start) start "$@";;
-  stop) stop ;;
+  stop) stop "$@";;
   *)
     echo "Usage:"
     echo "./start.sh start|stop"

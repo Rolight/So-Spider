@@ -2,6 +2,7 @@ import json
 import redis
 import subprocess
 import sys
+import time
 
 
 class SoSpiderSchdulerBase(object):
@@ -29,6 +30,8 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
         print('Schduler has running as %s' % self.name)
         subprocess.Popen(['python', 'cluster_manager.py', self.name])
         print('cluster manager run success')
+        while True:
+            time.sleep(5)
 
 
 if __name__ == '__main__':
