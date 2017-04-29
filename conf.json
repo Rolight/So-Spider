@@ -9,5 +9,5 @@
     "task_queue_key": "so.core.tasks",
     "log_key": "so.core.task.{task_id}.log",
     "url_log_key": "so.core.task.urls",
-    "task_command_key": "so.core.tasks.{task_id}.{command}"
+    "task_command_key": "so.core.task.{task_id}.{command}"
 }

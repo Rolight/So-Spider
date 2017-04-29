@@ -134,13 +134,13 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
 
     def register(self):
         key = self.key_of_spider(self.name)
-        self.redis_cache.set(key, self.data)
-        print('Registered with data:\n%s' % self.data)
+        self.redis_cache.set(key, json.dumps(self.data))
+        print('Registered (%s) with data:\n%s' % (key, self.data))
 
     def run(self):
         print('Schduler has running as %s' % self.name)
         self.register()
-        subprocess.Popen(['python', 'cluster_manager.py', self.name], stdout=subprocess.PIPE)
+        subprocess.Popen(['python', 'cluster_manager.py', self.name])
         print('cluster manager run success')
         while True:
             self.set_idle()
