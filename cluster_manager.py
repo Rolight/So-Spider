@@ -29,10 +29,11 @@ class SoClusterManager(SoSpiderSchdulerBase):
                 if self.redis_cache.exists(self.key_of_spider(name))
             ]
             print('living spiders in cluster is %s' % living_spiders)
-            if living_spiders:
-                self.redis_cache.sadd(cluster_key, *living_spiders)
-            else:
-                self.redis_cache.delete(cluster_key)
+            self.redis_cache.sadd(cluster_key, *living_spiders)
+            for spider in all_spiders:
+                if spider not in living_spiders:
+                    self.redis_cache.srem(cluster_key, spider)
+            sys.stdout.flush()
 
 
 if __name__ == '__main__':

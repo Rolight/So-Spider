@@ -46,12 +46,19 @@ start() {
 
   docker run -d --name $spider_name \
     --volumes-from so-spider-data \
-    --log-opt max-size=10m \
-    --log-opt max-file=9 \
     ${BaseImage} \
     python scheduler.py "$1"
 
   check_exec_success "$?" "start spider $1 container"
+}
+
+shell() {
+  create_data_volume
+
+  docker run -it --rm \
+    --volumes-from so-spider-data \
+    ${BaseImage} \
+    bash
 }
 
 stop() {
@@ -73,9 +80,11 @@ shift
 case "$Action" in
   start) start "$@";;
   stop) stop "$@";;
+  shell) shell ;;
   *)
     echo "Usage:"
     echo "./start.sh start|stop"
+    echo "./start.sh shell"
     exit 1
     ;;
 esac

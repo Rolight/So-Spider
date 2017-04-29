@@ -3,9 +3,10 @@ import redis
 import subprocess
 import sys
 import time
+import threading
 
 
-class SoSpiderSchdulerBase(object):
+class SoSpiderSchdulerBase():
 
     def load_conf(self):
         with open('conf.json', 'r') as f:
@@ -27,6 +28,18 @@ class SoSpiderSchdulerBase(object):
         return self.conf['spider_key'].format(
             spider_name=spider_name)
 
+    def key_of_task_queue(self):
+        return self.conf['task_queue_key']
+
+    def key_of_task_log(self):
+        return self.conf['log_key'].format(
+            task_id=self.task_id)
+
+    def key_of_task_command(self, command):
+        return self.conf['task_command_key'].format(
+            task_id=self.task_id,
+            command=command)
+
 
 class SoSpiderSchduler(SoSpiderSchdulerBase):
 
@@ -44,16 +57,95 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
         return {field: getattr(self, field)
                 for field in self.serializer_fields}
 
+    def set_idle(self):
+        self.status = 'idle'
+        self.website_id = 0
+        self.task_id = 0
+        self.register()
+
+    def wait_for_task(self):
+        print('watting for task')
+        key = self.key_of_task_queue()
+        task = self.redis_cache.blpop(key, timeout=0)
+        task = json.loads(str(task[1]))
+        print('get a task %s' % task)
+        return task
+
+    def collect_log(self, process):
+        log_key = self.key_of_task_log()
+        while process.poll() is None:
+            log = process.stdout.readline()
+            if log.strip():
+                self.redis_cache.rpush(log_key, log)
+            time.sleep(1)
+        logs = process.stdout.readlines()
+        # push remind logs
+        if logs:
+            self.redis_cache.rpush(log_key, *logs)
+        self.mannual_log(
+            'task finished with return_code %s' %
+            process.poll())
+
+    def mannual_log(self, log):
+        log_key = self.key_of_task_log()
+        self.redis_cache.rpush(log_key, log)
+
+    def run_task(self, task):
+        self.status = 'running'
+        self.website_id = task['website_id']
+        self.task_id = task['task_id']
+        self.register()
+
+        # start subprocess to run the spider
+        # process = subprocess.Popen(
+        #     ['scrapy', 'crawl', 'generic_spider', '-a',
+        #      'config=%s' % json.dumps(task)],
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.PIPE
+        # )
+        process = subprocess.Popen(
+            ['ping', 'www.baidu.com'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+        # run the log thread to collect log
+        log_thread = threading.Thread(
+            target=self.collect_log,
+            args=(process, )
+        )
+        log_thread.start()
+
+        while True:
+            # check if the process still running
+            return_code = process.poll()
+            if return_code is not None:
+                break
+            # checkif has command
+            command = 'stop'
+            command_key = self.key_of_task_command(command)
+            num_commands = self.redis_cache.getset(
+                command_key, 0)
+            if num_commands is not None and int(num_commands) > 0:
+                process.kill()
+                self.mannual_log('received stop command')
+            time.sleep(3)
+            # TODO call apg to update log
+
     def register(self):
         key = self.key_of_spider(self.name)
         self.redis_cache.set(key, self.data)
+        print('Registered with data:\n%s' % self.data)
 
     def run(self):
         print('Schduler has running as %s' % self.name)
         self.register()
-        subprocess.Popen(['python', 'cluster_manager.py', self.name])
+        subprocess.Popen(['python', 'cluster_manager.py', self.name], stdout=subprocess.PIPE)
         print('cluster manager run success')
         while True:
+            self.set_idle()
+            task = self.wait_for_task()
+            self.run_task(task)
             time.sleep(5)
 
 
