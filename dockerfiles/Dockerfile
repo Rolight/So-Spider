@@ -12,10 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN pip install -U pip -i https://pypi.doubanio.com/simple/
+RUN pip install -U pip
 
 COPY requirements.txt /usr/src/app
-RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.doubanio.com/simple
+RUN pip install --no-cache-dir -r requirements.txt
 
 # for shell
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,4 +24,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         redis-tools \
      && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir ipython uwsgitop -i https://pypi.doubanio.com/simple
+RUN pip install --no-cache-dir ipython uwsgitop

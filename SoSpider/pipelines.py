@@ -15,9 +15,9 @@ class SospiderPipeline(object):
         extra_data = data.pop('extra')
         data.update(extra_data)
         es = Elasticsearch()
-        es.indices.create(index='test-index', ignore=400)
+        es.indices.create(index=spider.es_index, ignore=400)
         es.create(
-            index='test-index',
+            index=spider.es_index,
             doc_type='fulltext',
             id=uuid.uuid1(),
             body=data

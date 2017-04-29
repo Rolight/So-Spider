@@ -20,6 +20,8 @@ class GenericSpiderSpider(CrawlSpider):
         self.allowed_domains = config.get('allowed_domains')
         self.start_urls = config.get('start_urls')
         self.download_delay = config.get('sleep', 0)
+        # es config
+        self.es_index = config.get('index')
         # rules config
         parse_url_rules = config.get('parse_url_rules', ['.*'])
         walk_url_rules = config.get('walk_url_rules', ['.*'])
