@@ -3,6 +3,7 @@ import json
 import scrapy
 import time
 
+from elasticsearch import Elasticsearch
 from pprint import pprint
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
@@ -17,6 +18,8 @@ class GenericSpiderSpider(CrawlSpider):
         self.__dict__.update(kwargs)
         config = json.loads(self.config)
         # base config
+        es_host = config.get('es_host')
+        self.es = Elasticsearch(es_host)
         self.allowed_domains = config.get('allowed_domains')
         self.start_urls = config.get('start_urls')
         self.download_delay = config.get('sleep', 0)
@@ -62,7 +65,4 @@ class GenericSpiderSpider(CrawlSpider):
             field_name = index['field_name']
             xpath = index['selector']
             item['extra'][field_name] = self.get_item(response, xpath)
-        print('fetched a item:')
-        print(item['title'])
-        # pprint(dict(item))
         return item

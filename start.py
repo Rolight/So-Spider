@@ -3,14 +3,14 @@ import subprocess
 import os
 
 params = {
-    "website_id": 1,
-    "task_id": 1,
-    "index": "rolight-sample",
-    "elasticsearch_host": "localhost",
-    "allowed_domains": ["spidertest-app.smartgslb.com"],
-    "start_urls": ["http://spidertest-app.smartgslb.com"],
-    "sleep": 1,
-    "parse_url_rules": [
+    u"website_id": 1,
+    u"task_id": 1,
+    u"index": u"rolight-sample",
+    u"elasticsearch_host": u"localhost",
+    u"allowed_domains": [u"spidertest-app.smartgslb.com"],
+    u"start_urls": [u"http://spidertest-app.smartgslb.com"],
+    u"sleep": 1,
+    u"parse_url_rules": [
         r"http://spidertest-app.smartgslb.com/\d{4}/\d{2}/\d{2}/.*",
     ],
 }

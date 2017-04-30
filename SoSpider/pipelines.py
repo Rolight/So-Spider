@@ -5,7 +5,6 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import uuid
-from elasticsearch import Elasticsearch
 
 
 class SospiderPipeline(object):
@@ -14,9 +13,8 @@ class SospiderPipeline(object):
         data = dict(item)
         extra_data = data.pop('extra')
         data.update(extra_data)
-        es = Elasticsearch()
-        es.indices.create(index=spider.es_index, ignore=400)
-        es.create(
+        spider.es.indices.create(index=spider.es_index, ignore=400)
+        spider.es.create(
             index=spider.es_index,
             doc_type='fulltext',
             id=uuid.uuid1(),
