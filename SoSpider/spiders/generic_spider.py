@@ -19,7 +19,7 @@ class GenericSpiderSpider(CrawlSpider):
     def __init__(self, *args, **kwargs):
         self.__dict__.update(kwargs)
         config = json.loads(self.config)
-        self.config_dict = config
+        self.conf_dict = config
         # base config
         es_host = config.get('es_host')
         self.es = Elasticsearch(es_host)
@@ -62,7 +62,7 @@ class GenericSpiderSpider(CrawlSpider):
 
     def url_key(self, url):
         return 'so.urls.{website_id}.{url}'.format(
-            website_id=self.config_dict['website_id'],
+            website_id=self.conf_dict['website_id'],
             url=url)
 
     def parse_item(self, response):
