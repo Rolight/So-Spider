@@ -14,6 +14,12 @@ BOT_NAME = 'SoSpider'
 SPIDER_MODULES = ['SoSpider.spiders']
 NEWSPIDER_MODULE = 'SoSpider.spiders'
 
+REDIS_CACHE = (
+    ('host', '10.200.10.1'),
+    ('port', '6379'),
+    ('db', 0),
+)
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'SoSpider (+http://www.yourdomain.com)'

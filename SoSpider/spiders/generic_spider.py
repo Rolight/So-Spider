@@ -2,6 +2,7 @@
 import json
 import scrapy
 import time
+import redis
 
 from elasticsearch import Elasticsearch
 from pprint import pprint
@@ -9,6 +10,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 from SoSpider.items import SospiderItem, clear_text
+from SoSpider import settings
 
 
 class GenericSpiderSpider(CrawlSpider):
@@ -17,6 +19,7 @@ class GenericSpiderSpider(CrawlSpider):
     def __init__(self, *args, **kwargs):
         self.__dict__.update(kwargs)
         config = json.loads(self.config)
+        self.config_dict = config
         # base config
         es_host = config.get('es_host')
         self.es = Elasticsearch(es_host)
@@ -48,11 +51,19 @@ class GenericSpiderSpider(CrawlSpider):
         self.title_xpath = config.get('title_selector', '//head//title')
         self.content_xpath = config.get('content_selector', 'body')
         self.extra_selectors = config.get('custom_selectors', [])
+        # redis
+        redis_conf = dict(settings.REDIS_CACHE)
+        self.redis_cache = redis.Redis(**redis_conf)
         super(GenericSpiderSpider, self).__init__(*args, **kwargs)
 
     def get_item(self, response, xpath):
         text = response.xpath(xpath).extract_first()
         return clear_text(text)
+
+    def url_key(self, url):
+        return 'so.urls.{website_id}.{url}'.format(
+            website_id=self.config_dict['website_id'],
+            url=url)
 
     def parse_item(self, response):
         item = SospiderItem()
