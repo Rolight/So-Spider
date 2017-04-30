@@ -73,14 +73,14 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
         print('get a task %s' % task)
         return task
 
-    def collect_log(self, process):
+    def collect_log(self, process, fd):
         log_key = self.key_of_task_log()
         while process.poll() is None:
-            log = process.stdout.readline()
+            log = fd.readline()
             if log.strip():
                 self.redis_cache.rpush(log_key, log)
             time.sleep(0.05)
-        logs = process.stdout.readlines()
+        logs = fd.readlines()
         # push remind logs
         if logs:
             self.redis_cache.rpush(log_key, *logs)
@@ -119,24 +119,28 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
         self.register()
 
         # start subprocess to run the spider
-        # process = subprocess.Popen(
-        #     ['scrapy', 'crawl', 'generic_spider', '-a',
-        #      'config=%s' % json.dumps(task)],
-        #     stdout=subprocess.PIPE,
-        #     stderr=subprocess.PIPE
-        # )
         process = subprocess.Popen(
-            ['ping', 'www.baidu.com'],
+            ['scrapy', 'crawl', 'generic_spider', '-a',
+             'config=%s' % json.dumps(task),
+             '--loglevel=INFO'
+             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
 
+        # process = subprocess.Popen(
+        #     ['ping', 'www.baidu.com'],
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.PIPE
+        # )
+
         # run the log thread to collect log
-        log_thread = threading.Thread(
-            target=self.collect_log,
-            args=(process, )
-        )
-        log_thread.start()
+        for fd in (process.stderr, process.stdout):
+            log_thread = threading.Thread(
+                target=self.collect_log,
+                args=(process, fd, )
+            )
+            log_thread.start()
 
         while True:
             # check if the process still running

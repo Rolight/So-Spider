@@ -10,10 +10,11 @@ class SoClusterManager(SoSpiderSchdulerBase):
         self.load_conf()
         self.make_connection()
         self.name = name
-        self.log_file = open('./%s_cluster.log' % self.name, 'w')
+        self.log_file = open('./logs/%s_cluster.log' % self.name, 'w')
 
     def log(self, text):
         self.log_file.write(text + '\n')
+        self.log_file.flush()
 
     def run(self):
         self.log('ClusterManger has running as %s' % self.name)

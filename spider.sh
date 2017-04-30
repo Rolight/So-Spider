@@ -20,13 +20,17 @@ check_exec_success() {
 }
 
 CurDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+LogDir=/data/so-spider/log/
 BaseImage="daocloud.io/rolight/so-spider:feature-scheduler-b732c3c"
+
+mkdir -p $LogDir
 
 create_data_volume(){
   docker inspect so-spider-data &> /dev/null
   if [[ "$?" == "1" ]]; then
     docker create --name so-spider-data \
       -v ${CurDir}:/usr/src/app \
+      -v ${LogDir}:/usr/src/app/logs \
       alpine /bin/true
 
     docker run --rm --volumes-from so-spider-data \
