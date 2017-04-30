@@ -10,30 +10,34 @@ class SoClusterManager(SoSpiderSchdulerBase):
         self.load_conf()
         self.make_connection()
         self.name = name
+        self.log_file = open('./%s_cluster.log' % self.name, 'w')
+
+    def log(self, text):
+        self.log_file.write(text + '\n')
 
     def run(self):
-        print('ClusterManger has running as %s' % self.name)
+        self.log('ClusterManger has running as %s' % self.name)
         while True:
             time.sleep(5)
             current_spider_key = self.key_of_spider(self.name)
             cluster_key = self.key_of_spider_cluster()
 
-            self.redis_cache.expire(current_spider_key, 15)
+            self.redis_cache.expire(current_spider_key, 30)
             self.redis_cache.sadd(cluster_key, self.name)
 
             all_spiders = self.redis_cache.smembers(cluster_key)
-            print('spiders supposed in cluster is %s' % all_spiders)
+            self.log('spiders supposed in cluster is %s' % all_spiders)
 
             living_spiders = [
                 name for name in all_spiders
                 if self.redis_cache.exists(self.key_of_spider(name))
             ]
-            print('living spiders in cluster is %s' % living_spiders)
-            self.redis_cache.sadd(cluster_key, *living_spiders)
+            self.log('living spiders in cluster is %s' % living_spiders)
+            if living_spiders:
+                self.redis_cache.sadd(cluster_key, *living_spiders)
             for spider in all_spiders:
                 if spider not in living_spiders:
                     self.redis_cache.srem(cluster_key, spider)
-            sys.stdout.flush()
 
 
 if __name__ == '__main__':

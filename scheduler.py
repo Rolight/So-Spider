@@ -4,6 +4,7 @@ import subprocess
 import sys
 import time
 import threading
+import requests
 
 
 class SoSpiderSchdulerBase():
@@ -11,6 +12,7 @@ class SoSpiderSchdulerBase():
     def load_conf(self):
         with open('conf.json', 'r') as f:
             self.conf = json.loads(f.read())
+        self.apg_host = self.conf['apg_host']
 
     def make_connection(self):
         redis_conf = self.conf['redis']
@@ -77,7 +79,7 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
             log = process.stdout.readline()
             if log.strip():
                 self.redis_cache.rpush(log_key, log)
-            time.sleep(1)
+            time.sleep(0.05)
         logs = process.stdout.readlines()
         # push remind logs
         if logs:
@@ -85,10 +87,30 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
         self.mannual_log(
             'task finished with return_code %s' %
             process.poll())
+        self.sync_log()
 
     def mannual_log(self, log):
         log_key = self.key_of_task_log()
         self.redis_cache.rpush(log_key, log)
+
+    def sync_log(self):
+        url = self.apg_host + 'spidertasks/{task_id}/sync/'.format(
+            task_id=self.task_id)
+        try:
+            response = requests.put(url, data={'spider': self.name})
+            print('sync log with response %s' % response.text)
+        except Exception as e:
+            print(e)
+
+    # set status to finish
+    def sync_status(self):
+        url = self.apg_host + 'spidertasks/{task_id}/'.format(
+            task_id=self.task_id)
+        try:
+            response = requests.put(url, data={'status': 1})
+            print('sync status with response %s' % response.text)
+        except Exception as e:
+            print(e)
 
     def run_task(self, task):
         self.status = 'running'
@@ -120,6 +142,7 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
             # check if the process still running
             return_code = process.poll()
             if return_code is not None:
+                self.sync_status()
                 break
             # checkif has command
             command = 'stop'
@@ -130,7 +153,8 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
                 process.kill()
                 self.mannual_log('received stop command')
             time.sleep(3)
-            # TODO call apg to update log
+            # sync through apg
+            self.sync_log()
 
     def register(self):
         key = self.key_of_spider(self.name)
@@ -140,7 +164,8 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
     def run(self):
         print('Schduler has running as %s' % self.name)
         self.register()
-        subprocess.Popen(['python', 'cluster_manager.py', self.name])
+        subprocess.Popen(['python', 'cluster_manager.py', self.name],
+                         stdout=subprocess.PIPE)
         print('cluster manager run success')
         while True:
             self.set_idle()
