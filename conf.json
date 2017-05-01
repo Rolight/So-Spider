@@ -4,7 +4,7 @@
         "port": 6379,
         "db": 0
     },
-    "apg_host": "http://10.200.10.1:8081/api/",
+    "apg_host": "http://10.200.10.1/backend/",
     "spiders_key": "so.core.spiders",
     "spider_key": "so.core.spiders.{spider_name}",
     "task_queue_key": "so.core.tasks",
