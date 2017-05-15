@@ -20,7 +20,6 @@ class SospiderPipeline(object):
                                       spider.conf_dict['expire_seconds'])
         extra_data = data.pop('extra')
         data.update(extra_data)
-        spider.es.indices.create(index=spider.es_index, ignore=400)
         spider.es.create(
             index=spider.es_index,
             doc_type='fulltext',
