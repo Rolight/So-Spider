@@ -28,6 +28,7 @@ class GenericSpiderSpider(CrawlSpider):
         self.download_delay = config.get('sleep', 0)
         # es config
         self.es_index = config.get('index')
+        self.es.indices.delete(index=self.es_index, ignore=400)
         self.es.indices.create(index=self.es_index, ignore=400)
         # rules config
         parse_url_rules = config.get('parse_url_rules', ['.*'])

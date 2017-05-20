@@ -31,6 +31,7 @@ create_data_volume(){
     docker create --name so-spider-data \
       -v ${CurDir}:/usr/src/app \
       -v ${LogDir}:/usr/src/app/logs \
+      -v ${CurDir}/hosts:/etc/hosts \
       alpine /bin/true
 
     docker run --rm --volumes-from so-spider-data \

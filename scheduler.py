@@ -122,7 +122,7 @@ class SoSpiderSchduler(SoSpiderSchdulerBase):
         process = subprocess.Popen(
             ['scrapy', 'crawl', 'generic_spider', '-a',
              'config=%s' % json.dumps(task),
-             '--loglevel=INFO'
+              '--loglevel=INFO'
              ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
